@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { useAutoSave, loadAutoSave } from '../../../../hooks/useAutoSave';
 import { Excalidraw } from '@excalidraw/excalidraw';
 import type { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw';
 import { StructBoxContainer } from './StructBox';
@@ -18,7 +19,7 @@ interface ConnectModeState {
   fromId?: string;
 }
 
-const ExcalidrawWrapper: React.FC = () => {
+const ExcalidrawWrapper: React.FC<{ storageKey?: string }> = ({ storageKey }) => {
   const [excalidrawAPI, setExcalidrawAPI] = useState<ExcalidrawImperativeAPI | null>(null);
   const [connections, setConnections] = useState<Connection[]>([]);
   const [connectMode, setConnectMode] = useState<ConnectModeState>({ active: false });
