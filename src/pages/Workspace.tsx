@@ -1,14 +1,13 @@
 import { Button, Typography, Row, Col, Statistic } from 'antd'
 import { PlusOutlined, DatabaseOutlined, ClockCircleOutlined } from '@ant-design/icons'
 import AnalysisList from '../components/Workspace/AnalysisList'
-// import CreateModal from '../components/Workspace/CreateModal' // Next task
+import CreateModal from '../components/Workspace/CreateModal'
 import { useState } from 'react'
 import { useAuthStore } from '../store/authStore'
 
 const { Title } = Typography
 
 export default function Workspace() {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const user = useAuthStore(state => state.user)
 
@@ -33,8 +32,7 @@ export default function Workspace() {
 
       <AnalysisList />
       
-      {/* Placeholder for modal, will be implemented in next task */}
-      {/* <CreateModal open={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} /> */}
+      <CreateModal open={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
     </div>
   )
 }
