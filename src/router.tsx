@@ -6,6 +6,12 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import OAuthCallback from './pages/OAuthCallback'
 import Profile from './pages/Profile'
+import Workspace from './pages/Workspace'
+import Community from './pages/Community'
+import AnalysisDetail from './pages/AnalysisDetail'
+import AnalysisProgress from './pages/AnalysisProgress'
+import AnalysisEditor from './pages/AnalysisEditor'
+import NotFound from './pages/NotFound'
 
 export const router = createBrowserRouter([
   {
@@ -18,13 +24,33 @@ export const router = createBrowserRouter([
       },
       {
         path: 'community',
-        element: <Home />,
+        element: <Community />,
+      },
+      {
+        path: 'community/:id',
+        element: <AnalysisDetail />,
       },
       {
         path: 'workspace',
         element: (
           <ProtectedRoute>
-            <div>Workspace (Protected)</div>
+            <Workspace />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'analysis/:id',
+        element: (
+          <ProtectedRoute>
+            <AnalysisEditor />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'analysis/:id/progress',
+        element: (
+          <ProtectedRoute>
+            <AnalysisProgress />
           </ProtectedRoute>
         ),
       },
@@ -50,7 +76,7 @@ export const router = createBrowserRouter([
       },
       {
         path: '*',
-        element: <div>404 Not Found</div>,
+        element: <NotFound />,
       },
     ],
   },
