@@ -50,4 +50,14 @@ export const authService = {
     saveDb(db)
     return withLatency({ token: 'demo-token', user })
   },
+  logout() {
+    return withLatency(true)
+  },
+  githubLogin() {
+    return withLatency(true)
+  },
+  wechatLogin() {
+    return withLatency(true)
+  },
+
 }

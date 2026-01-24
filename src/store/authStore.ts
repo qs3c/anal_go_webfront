@@ -5,10 +5,10 @@ import type { User } from '../types'
 interface AuthState {
   user: User | null
   token: string | null
-  isAuthenticated: boolean
+  is_authenticated: boolean
   login: (token: string, user: User) => void
   logout: () => void
-  updateUser: (user: Partial<User>) => void
+  update_user: (user: Partial<User>) => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -16,20 +16,20 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       token: null,
-      isAuthenticated: false,
+      is_authenticated: false,
       login: (token, user) => {
-        set({ token, user, isAuthenticated: true })
+        set({ token, user, is_authenticated: true })
       },
       logout: () => {
-        set({ token: null, user: null, isAuthenticated: false })
+        set({ token: null, user: null, is_authenticated: false })
       },
-      updateUser: (updates) =>
+      update_user: (updates) =>
         set((state) => ({
           user: state.user ? { ...state.user, ...updates } : null,
         })),
     }),
     {
-      name: 'auth-storage',
+      name: 'auth_storage',
     }
   )
 )
