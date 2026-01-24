@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { useAutoSave, loadAutoSave } from '../../../../hooks/useAutoSave';
+import { useAutoSave, loadAutoSave } from '../../../../../hooks/useAutoSave';
 import { Excalidraw } from '@excalidraw/excalidraw';
 import type { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw';
 import { StructBoxContainer } from './StructBox';
@@ -36,6 +36,22 @@ const ExcalidrawWrapper: React.FC<{ storageKey?: string }> = ({ storageKey }) =>
     importFromAnalyzer,
     clearAll,
   } = useExcalidrawSync(excalidrawAPI);
+
+  useAutoSave(storageKey ?? '', {
+    elements: syncState.elements,
+    appState: syncState.appState,
+  });
+
+  useEffect(() => {
+    if (!excalidrawAPI || !storageKey) return;
+    const saved = loadAutoSave<{ elements: any[]; appState: any }>(storageKey);
+    if (saved?.elements?.length) {
+      excalidrawAPI.updateScene({
+        elements: saved.elements,
+        appState: saved.appState ?? undefined,
+      });
+    }
+  }, [excalidrawAPI, storageKey]);
 
   // 文件输入 ref
   const fileInputRef = useRef<HTMLInputElement>(null);

@@ -1,5 +1,19 @@
 import { withLatency } from './api'
 import { loadDb, saveDb, nextId, nowIso } from './mockDb'
+import type { User } from '../types'
+
+function buildUser(payload: { id: number; username: string; email: string }): User {
+  return {
+    id: payload.id,
+    username: payload.username,
+    email: payload.email,
+    avatar_url: '',
+    bio: '',
+    subscription_level: 'free',
+    email_verified: false,
+    created_at: nowIso(),
+  }
+}
 
 export const authService = {
   async login(payload: { email: string; password: string }) {
@@ -8,12 +22,7 @@ export const authService = {
     if (!user) {
       return withLatency({
         token: 'demo-token',
-        user: {
-          id: 0,
-          username: payload.email.split('@')[0],
-          email: payload.email,
-          created_at: nowIso(),
-        },
+        user: buildUser({ id: 0, username: payload.email.split('@')[0], email: payload.email }),
       })
     }
     return withLatency({ token: 'demo-token', user })
@@ -21,13 +30,7 @@ export const authService = {
 
   async register(payload: { username: string; email: string; password: string }) {
     const db = loadDb()
-    const timestamp = nowIso()
-    const user = {
-      id: nextId(db.users),
-      username: payload.username,
-      email: payload.email,
-      created_at: timestamp,
-    }
+    const user = buildUser({ id: nextId(db.users), username: payload.username, email: payload.email })
     db.users.push(user)
     saveDb(db)
     return withLatency({ token: 'demo-token', user })
@@ -39,13 +42,7 @@ export const authService = {
     if (existing) {
       return withLatency({ token: 'demo-token', user: existing })
     }
-    const timestamp = nowIso()
-    const user = {
-      id: nextId(db.users),
-      username: 'Demo User',
-      email: 'demo@go-analyzer.dev',
-      created_at: timestamp,
-    }
+    const user = buildUser({ id: nextId(db.users), username: 'Demo User', email: 'demo@go-analyzer.dev' })
     db.users.push(user)
     saveDb(db)
     return withLatency({ token: 'demo-token', user })
@@ -59,5 +56,4 @@ export const authService = {
   wechatLogin() {
     return withLatency(true)
   },
-
 }

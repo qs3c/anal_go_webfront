@@ -7,8 +7,7 @@ class ResizeObserverMock {
 }
 
 if (!('ResizeObserver' in globalThis)) {
-  // @ts-expect-error - test env shim
-  globalThis.ResizeObserver = ResizeObserverMock
+  ;(globalThis as any).ResizeObserver = ResizeObserverMock
 }
 
 if (typeof window !== 'undefined' && !window.matchMedia) {
