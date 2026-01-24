@@ -1,3 +1,4 @@
+import { Suspense, lazy } from 'react'
 import { createBrowserRouter } from 'react-router-dom'
 import MainLayout from './components/Layout/MainLayout'
 import { ProtectedRoute } from './components/ProtectedRoute'
@@ -8,10 +9,17 @@ import OAuthCallback from './pages/OAuthCallback'
 import Profile from './pages/Profile'
 import Workspace from './pages/Workspace'
 import Community from './pages/Community'
-import AnalysisDetail from './pages/AnalysisDetail'
-import AnalysisProgress from './pages/AnalysisProgress'
-import AnalysisEditor from './pages/AnalysisEditor'
 import NotFound from './pages/NotFound'
+
+const AnalysisDetail = lazy(() => import('./pages/AnalysisDetail'))
+const AnalysisProgress = lazy(() => import('./pages/AnalysisProgress'))
+const AnalysisEditor = lazy(() => import('./pages/AnalysisEditor'))
+
+const withSuspense = (element: React.ReactNode) => (
+  <Suspense fallback={<div style={{ padding: 24 }}>加载中...</div>}>
+    {element}
+  </Suspense>
+)
 
 export const router = createBrowserRouter([
   {
@@ -28,7 +36,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'community/:id',
-        element: <AnalysisDetail />,
+        element: withSuspense(<AnalysisDetail />),
       },
       {
         path: 'workspace',
@@ -42,7 +50,7 @@ export const router = createBrowserRouter([
         path: 'analysis/:id',
         element: (
           <ProtectedRoute>
-            <AnalysisEditor />
+            {withSuspense(<AnalysisEditor />)}
           </ProtectedRoute>
         ),
       },
@@ -50,7 +58,7 @@ export const router = createBrowserRouter([
         path: 'analysis/:id/progress',
         element: (
           <ProtectedRoute>
-            <AnalysisProgress />
+            {withSuspense(<AnalysisProgress />)}
           </ProtectedRoute>
         ),
       },
