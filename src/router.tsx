@@ -1,6 +1,9 @@
 import { createBrowserRouter } from 'react-router-dom'
 import MainLayout from './components/Layout/MainLayout'
 import Home from './pages/Home'
+import Login from './pages/Login'
+import Register from './pages/Register'
+import OAuthCallback from './pages/OAuthCallback'
 
 export const router = createBrowserRouter([
   {
@@ -9,23 +12,27 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Home />, // Or Navigate to /community later
+        element: <Home />,
       },
       {
         path: 'community',
-        element: <Home />, // Placeholder
+        element: <Home />,
       },
       {
         path: 'workspace',
-        element: <div>Workspace (Protected)</div>, // Placeholder
+        element: <div>Workspace (Protected)</div>,
       },
       {
         path: 'login',
-        element: <div>Login Page</div>, // Placeholder
+        element: <Login />,
       },
       {
         path: 'register',
-        element: <div>Register Page</div>, // Placeholder
+        element: <Register />,
+      },
+      {
+        path: 'auth/callback',
+        element: <OAuthCallback />,
       },
       {
         path: '*',
