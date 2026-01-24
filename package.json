@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.0",
+    "@excalidraw/excalidraw": "^0.18.0",
     "antd": "^6.2.1",
     "axios": "^1.13.2",
     "clsx": "^2.1.1",
