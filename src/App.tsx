@@ -1,12 +1,8 @@
-import { Button } from 'antd'
+import { RouterProvider } from 'react-router-dom'
+import { router } from './router'
 
 function App() {
-  return (
-    <div style={{ padding: 20 }}>
-      <h1>Go Project Analyzer</h1>
-      <Button type="primary">Hello World</Button>
-    </div>
-  )
+  return <RouterProvider router={router} />
 }
 
 export default App

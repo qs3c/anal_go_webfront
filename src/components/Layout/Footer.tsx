@@ -1,11 +1,12 @@
 import { Layout } from 'antd'
+import { APP_NAME } from '../../utils/constants'
 
 const { Footer: AntFooter } = Layout
 
 export default function Footer() {
   return (
     <AntFooter style={{ textAlign: 'center', color: '#888' }}>
-      Go Project Analyzer ©{new Date().getFullYear()} Created by Gemini & You
+      {APP_NAME} ©{new Date().getFullYear()} Created by Go Analyzer Team
     </AntFooter>
   )
 }

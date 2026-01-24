@@ -1,6 +1,7 @@
 import { Layout, Menu, Button, Space } from 'antd'
 import { Link, useLocation } from 'react-router-dom'
 import { GithubOutlined } from '@ant-design/icons'
+import { APP_NAME } from '../../utils/constants'
 
 const { Header: AntHeader } = Layout
 
@@ -8,6 +9,10 @@ export default function Header() {
   const location = useLocation()
 
   const menuItems = [
+    {
+      key: '/',
+      label: <Link to="/">首页</Link>,
+    },
     {
       key: '/community',
       label: <Link to="/community">广场</Link>,
@@ -40,7 +45,7 @@ export default function Header() {
             textDecoration: 'none',
           }}
         >
-          GoAnalyzer
+          {APP_NAME}
         </Link>
         <Menu
           mode="horizontal"
@@ -51,7 +56,12 @@ export default function Header() {
       </div>
 
       <Space>
-        <Button type="text" icon={<GithubOutlined />} href="https://github.com/qs3c/struct_element" target="_blank" />
+        <Button
+          type="text"
+          icon={<GithubOutlined />}
+          href="https://github.com/qs3c/struct_element"
+          target="_blank"
+        />
         <Link to="/login">
           <Button type="primary" ghost>
             登录
