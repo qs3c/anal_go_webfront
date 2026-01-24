@@ -1,23 +1,6 @@
 import { storage } from '../utils/storage'
 import { STORAGE_KEYS } from '../utils/constants'
-
-type MockUser = {
-  id: number
-  username: string
-  email: string
-  created_at: string
-}
-
-type MockAnalysis = {
-  id: number
-  name: string
-  description: string
-  repo_url: string
-  status: 'queued' | 'running' | 'completed' | 'failed'
-  progress: number
-  created_at: string
-  updated_at: string
-}
+import type { Analysis, User } from '../types'
 
 type MockComment = {
   id: number
@@ -28,8 +11,8 @@ type MockComment = {
 }
 
 type MockDb = {
-  users: MockUser[]
-  analyses: MockAnalysis[]
+  users: User[]
+  analyses: Analysis[]
   comments: MockComment[]
 }
 
@@ -63,4 +46,38 @@ export function nextId(items: { id: number }[]) {
 
 export function nowIso() {
   return new Date().toISOString()
+}
+
+export function buildAnalysis(payload: {
+  title: string
+  description?: string
+  creation_type: 'ai' | 'manual'
+  repo_url?: string
+  start_struct?: string
+  analysis_depth?: number
+  model_name?: string
+}): Analysis {
+  const timestamp = nowIso()
+  return {
+    id: 0,
+    user_id: 1,
+    title: payload.title,
+    description: payload.description ?? '',
+    creation_type: payload.creation_type,
+    repo_url: payload.repo_url,
+    start_struct: payload.start_struct,
+    analysis_depth: payload.analysis_depth,
+    model_name: payload.model_name,
+    diagram_oss_url: '',
+    diagram_size: 0,
+    status: 'pending',
+    error_message: '',
+    is_public: false,
+    view_count: 0,
+    like_count: 0,
+    comment_count: 0,
+    bookmark_count: 0,
+    created_at: timestamp,
+    updated_at: timestamp,
+  }
 }

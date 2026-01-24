@@ -1,6 +1,6 @@
 import { Form, Input, Slider, Select } from 'antd'
 
-export default function ConfigForm({ form }: { form: any }) {
+export default function ConfigForm() {
   return (
     <>
       <Form.Item
@@ -21,26 +21,16 @@ export default function ConfigForm({ form }: { form: any }) {
         <Input placeholder="Engine" />
       </Form.Item>
 
-      <Form.Item
-        name="analysis_depth"
-        label="分析深度"
-        initialValue={3}
-      >
-        <Slider
-          min={1}
-          max={10}
-          marks={{ 1: '1', 3: '3', 5: '5', 10: '10' }}
-        />
+      <Form.Item name="analysis_depth" label="分析深度" initialValue={3}>
+        <Slider min={1} max={10} marks={{ 1: '1', 3: '3', 5: '5', 10: '10' }} />
       </Form.Item>
 
-      <Form.Item
-        name="model_name"
-        label="选择模型"
-        initialValue="gpt-3.5-turbo"
-      >
+      <Form.Item name="model_name" label="选择模型" initialValue="gpt-3.5-turbo">
         <Select>
           <Select.Option value="gpt-3.5-turbo">GPT-3.5 Turbo (基础)</Select.Option>
-          <Select.Option value="gpt-4" disabled>GPT-4 (Pro 仅限)</Select.Option>
+          <Select.Option value="gpt-4" disabled>
+            GPT-4 (Pro 仅限)
+          </Select.Option>
         </Select>
       </Form.Item>
     </>

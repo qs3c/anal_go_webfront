@@ -11,8 +11,6 @@ export const useAnalysis = () => {
     current_analysis,
     set_analyses,
     set_current_analysis,
-    add_analysis,
-    update_analysis,
   } = useAnalysisStore()
 
   const fetchAnalyses = async (params: { page: number; page_size: number }) => {
@@ -32,13 +30,20 @@ export const useAnalysis = () => {
     }
   }
 
-  const createAnalysis = async (payload: { name: string; description: string; repo_url: string }) => {
+  const createAnalysis = async (payload: {
+    title: string
+    description?: string
+    creation_type: 'ai' | 'manual'
+    repo_url?: string
+    start_struct?: string
+    analysis_depth?: number
+    model_name?: string
+  }) => {
     setLoading(true)
     try {
       const res = await analysisService.create(payload)
       if (res.code === 0) {
-        add_analysis(res.data as Analysis)
-        return res.data as Analysis
+        return res.data
       }
       message.error(res.message)
       return null
@@ -56,7 +61,6 @@ export const useAnalysis = () => {
     current_analysis,
     loading,
     set_current_analysis,
-    update_analysis,
     fetchAnalyses,
     createAnalysis,
   }

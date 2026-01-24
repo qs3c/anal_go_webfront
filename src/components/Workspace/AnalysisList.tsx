@@ -1,48 +1,21 @@
-import { useEffect, useState } from 'react'
-import { List, Spin, Empty, message } from 'antd'
+import { useEffect } from 'react'
+import { List, Spin, Empty } from 'antd'
 import AnalysisCard from './AnalysisCard'
-import { useAnalysisStore } from '../../store/analysisStore'
-import { analysisService } from '../../services/analysisService'
+import { useAnalysis } from '../../hooks/useAnalysis'
 
 export default function AnalysisList() {
-  const { analyses, setAnalyses, loading, setLoading, removeAnalysis } = useAnalysisStore()
-  const [initialized, setInitialized] = useState(false)
-
-  const fetchAnalyses = async () => {
-    setLoading(true)
-    try {
-      const res = await analysisService.getMyAnalyses({ page: 1, page_size: 20 })
-      // res.data is expected to be { items, total } based on service return type
-      // But service definition says: api.get<... { items... }>. So res is { items, total }
-      setAnalyses(res.items)
-    } catch (error) {
-      console.error('Fetch analyses failed:', error)
-    } finally {
-      setLoading(false)
-      setInitialized(true)
-    }
-  }
+  const { analyses, loading, fetchAnalyses } = useAnalysis()
 
   useEffect(() => {
-    fetchAnalyses()
+    fetchAnalyses({ page: 1, page_size: 12 })
   }, [])
 
-  const handleDelete = async (id: number) => {
-    try {
-      await analysisService.deleteAnalysis(id)
-      removeAnalysis(id)
-      message.success('删除成功')
-    } catch (error) {
-      message.error('删除失败')
-    }
-  }
-
-  if (!initialized && loading) {
+  if (loading && analyses.length === 0) {
     return <Spin size="large" style={{ display: 'block', margin: '50px auto' }} />
   }
 
   if (analyses.length === 0) {
-    return <Empty description="暂无分析项目，点击右上角新建" style={{ margin: '50px 0' }} />
+    return <Empty description="暂无分析项目，点击右上角创建" style={{ margin: '50px 0' }} />
   }
 
   return (
@@ -51,7 +24,7 @@ export default function AnalysisList() {
       dataSource={analyses}
       renderItem={(item) => (
         <List.Item>
-          <AnalysisCard analysis={item} onDelete={handleDelete} />
+          <AnalysisCard analysis={item} />
         </List.Item>
       )}
     />
