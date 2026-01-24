@@ -1,9 +1,11 @@
 import { createBrowserRouter } from 'react-router-dom'
 import MainLayout from './components/Layout/MainLayout'
+import { ProtectedRoute } from './components/ProtectedRoute'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import OAuthCallback from './pages/OAuthCallback'
+import Profile from './pages/Profile'
 
 export const router = createBrowserRouter([
   {
@@ -20,7 +22,19 @@ export const router = createBrowserRouter([
       },
       {
         path: 'workspace',
-        element: <div>Workspace (Protected)</div>,
+        element: (
+          <ProtectedRoute>
+            <div>Workspace (Protected)</div>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'profile',
+        element: (
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'login',
