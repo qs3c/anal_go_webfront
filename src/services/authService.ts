@@ -1,45 +1,53 @@
-import api from './api'
-import type { LoginRequest, RegisterRequest, LoginResponse } from '../types/api'
-import type { User } from '../types'
+import { withLatency } from './api'
+import { loadDb, saveDb, nextId, nowIso } from './mockDb'
 
 export const authService = {
-  // 注册
-  async register(data: RegisterRequest) {
-    const res = await api.post<any, { data: { user_id: number } }>(
-      '/auth/register',
-      data
-    )
-    return res.data
+  async login(payload: { email: string; password: string }) {
+    const db = loadDb()
+    const user = db.users.find((item) => item.email === payload.email)
+    if (!user) {
+      return withLatency({
+        token: 'demo-token',
+        user: {
+          id: 0,
+          username: payload.email.split('@')[0],
+          email: payload.email,
+          created_at: nowIso(),
+        },
+      })
+    }
+    return withLatency({ token: 'demo-token', user })
   },
 
-  // 登录
-  async login(data: LoginRequest) {
-    const res = await api.post<any, { data: LoginResponse }>('/auth/login', data)
-    const { token, user } = res.data
-    // Token persistence is handled by the store calling this service, 
-    // but the service returns it for immediate use.
-    return { token, user }
+  async register(payload: { username: string; email: string; password: string }) {
+    const db = loadDb()
+    const timestamp = nowIso()
+    const user = {
+      id: nextId(db.users),
+      username: payload.username,
+      email: payload.email,
+      created_at: timestamp,
+    }
+    db.users.push(user)
+    saveDb(db)
+    return withLatency({ token: 'demo-token', user })
   },
 
-  // 登出
-  async logout() {
-    // Optional: Call backend logout endpoint if exists
-    // await api.post('/auth/logout')
-  },
-
-  // 获取用户信息
-  async getProfile() {
-    const res = await api.get<any, { data: User }>('/user/profile')
-    return res.data
-  },
-
-  // GitHub OAuth 登录
-  githubLogin() {
-    window.location.href = `${import.meta.env.VITE_API_BASE_URL || '/api/v1'}/auth/github`
-  },
-
-  // 微信 OAuth 登录
-  wechatLogin() {
-    window.location.href = `${import.meta.env.VITE_API_BASE_URL || '/api/v1'}/auth/wechat`
+  async demoLogin() {
+    const db = loadDb()
+    const existing = db.users.find((item) => item.email === 'demo@go-analyzer.dev')
+    if (existing) {
+      return withLatency({ token: 'demo-token', user: existing })
+    }
+    const timestamp = nowIso()
+    const user = {
+      id: nextId(db.users),
+      username: 'Demo User',
+      email: 'demo@go-analyzer.dev',
+      created_at: timestamp,
+    }
+    db.users.push(user)
+    saveDb(db)
+    return withLatency({ token: 'demo-token', user })
   },
 }

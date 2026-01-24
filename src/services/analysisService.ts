@@ -1,56 +1,35 @@
-import api from './api'
-import type {
-  CreateAnalysisRequest,
-  UpdateAnalysisRequest,
-  AnalysisListParams,
-  ShareRequest,
-  Analysis,
-} from '../types/api'
+import { withLatency } from './api'
+import { loadDb, saveDb, nextId, nowIso } from './mockDb'
 
 export const analysisService = {
-  // 获取我的分析列表
-  async getMyAnalyses(params: AnalysisListParams) {
-    const res = await api.get<any, { data: { items: Analysis[], total: number } }>('/analyses', { params })
-    return res.data
+  async list(params: { page: number; page_size: number }) {
+    const db = loadDb()
+    const start = (params.page - 1) * params.page_size
+    const end = start + params.page_size
+    const items = db.analyses.slice(start, end)
+    return withLatency({
+      total: db.analyses.length,
+      page: params.page,
+      page_size: params.page_size,
+      items,
+    })
   },
 
-  // 创建分析
-  async createAnalysis(data: CreateAnalysisRequest) {
-    const res = await api.post<any, { data: { analysis_id: number; job_id?: number } }>('/analyses', data)
-    return res.data
-  },
-
-  // 获取分析详情
-  async getAnalysis(id: number) {
-    const res = await api.get<any, { data: Analysis }>(`/analyses/${id}`)
-    return res.data
-  },
-
-  // 更新分析
-  async updateAnalysis(id: number, data: UpdateAnalysisRequest) {
-    const res = await api.put<any, { data: Analysis }>(`/analyses/${id}`, data)
-    return res.data
-  },
-
-  // 删除分析
-  async deleteAnalysis(id: number) {
-    await api.delete(`/analyses/${id}`)
-  },
-
-  // 分享到广场
-  async shareAnalysis(id: number, data: ShareRequest) {
-    const res = await api.post(`/analyses/${id}/share`, data)
-    return res.data
-  },
-
-  // 取消分享
-  async unshareAnalysis(id: number) {
-    await api.delete(`/analyses/${id}/share`)
-  },
-
-  // 获取任务状态
-  async getJobStatus(id: number) {
-    const res = await api.get(`/analyses/${id}/job-status`)
-    return res.data
+  async create(payload: { name: string; description: string; repo_url: string }) {
+    const db = loadDb()
+    const timestamp = nowIso()
+    const newItem = {
+      id: nextId(db.analyses),
+      name: payload.name,
+      description: payload.description,
+      repo_url: payload.repo_url,
+      status: 'queued' as const,
+      progress: 0,
+      created_at: timestamp,
+      updated_at: timestamp,
+    }
+    db.analyses.unshift(newItem)
+    saveDb(db)
+    return withLatency(newItem)
   },
 }
