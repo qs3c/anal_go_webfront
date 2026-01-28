@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Button, Card, Space, Typography } from 'antd'
+import { Button, Card, Space, Typography, message } from 'antd'
 import { communityService } from '../services/communityService'
 import { commentService } from '../services/commentService'
 import CommentList from '../components/Comment/CommentList'
 import CommentInput from '../components/Comment/CommentInput'
 import type { CommunityAnalysis, Comment } from '../types'
+import { useAuthStore } from '../store/authStore'
 
 const { Title, Paragraph } = Typography
 
@@ -13,6 +14,7 @@ export default function AnalysisDetail() {
   const params = useParams()
   const navigate = useNavigate()
   const analysisId = useMemo(() => Number(params.id), [params.id])
+  const isAuthenticated = useAuthStore((state) => state.is_authenticated)
   const [detail, setDetail] = useState<CommunityAnalysis | null>(null)
   const [comments, setComments] = useState<Comment[]>([])
 
@@ -43,6 +45,11 @@ export default function AnalysisDetail() {
   }
 
   const handleSubmit = async (content: string) => {
+    if (!isAuthenticated) {
+      message.info('请先登录后再评论')
+      navigate('/login')
+      return
+    }
     await commentService.create({ analysis_id: analysisId, user_id: 1, content })
     await loadComments()
   }

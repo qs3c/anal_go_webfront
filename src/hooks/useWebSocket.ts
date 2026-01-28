@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { message } from 'antd'
 import type { ProgressMessage } from '../types'
 
@@ -53,6 +53,11 @@ export async function createMockProgressStream() {
 export const useWebSocket = (analysisId: number, onCompleted?: (ossURL: string) => void) => {
   const [progress, setProgress] = useState<ProgressMessage | null>(null)
   const [connected, setConnected] = useState(false)
+  const onCompletedRef = useRef(onCompleted)
+
+  useEffect(() => {
+    onCompletedRef.current = onCompleted
+  }, [onCompleted])
 
   useEffect(() => {
     if (!analysisId) return
@@ -72,7 +77,7 @@ export const useWebSocket = (analysisId: number, onCompleted?: (ossURL: string) 
       if (event.type === 'analysis_completed') {
         message.success('分析完成！')
         if (event.data.diagram_oss_url) {
-          onCompleted?.(event.data.diagram_oss_url)
+          onCompletedRef.current?.(event.data.diagram_oss_url)
         }
         setConnected(false)
         return
@@ -97,7 +102,7 @@ export const useWebSocket = (analysisId: number, onCompleted?: (ossURL: string) 
       if (timer) clearTimeout(timer)
       setConnected(false)
     }
-  }, [analysisId, onCompleted])
+  }, [analysisId])
 
   return { progress, connected }
 }

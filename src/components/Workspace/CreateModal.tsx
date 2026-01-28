@@ -72,6 +72,7 @@ export default function CreateModal({ open, onClose }: Props) {
     >
       <Tabs
         activeKey={activeTab}
+        destroyInactiveTabPane
         onChange={(key) => setActiveTab(key as 'ai' | 'manual')}
         items={[
           {

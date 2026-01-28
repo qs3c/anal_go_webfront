@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Spin, message } from 'antd'
 import { useAuthStore } from '../store/authStore'
@@ -8,8 +8,11 @@ export default function OAuthCallback() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { login } = useAuthStore()
+  const handledRef = useRef(false)
 
   useEffect(() => {
+    if (handledRef.current) return
+    handledRef.current = true
     const token = searchParams.get('token')
 
     const finish = async () => {
