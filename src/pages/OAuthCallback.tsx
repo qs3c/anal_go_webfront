@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Spin, message } from 'antd'
 import { useAuthStore } from '../store/authStore'
-import { authService } from '../services/authService'
+import { userService } from '../services/userService'
 
 export default function OAuthCallback() {
   const navigate = useNavigate()
@@ -15,25 +15,25 @@ export default function OAuthCallback() {
     handledRef.current = true
     const token = searchParams.get('token')
 
-    const finish = async () => {
+    const finish = async (oauthToken: string) => {
       try {
-        const res = await authService.demoLogin()
-        if (res.code === 0) {
-          login(res.data.token, res.data.user)
-          message.success('登录成功')
-          navigate('/workspace')
-          return
-        }
-        message.error(res.message)
+        // Store token first so API calls are authenticated
+        localStorage.setItem('token', oauthToken)
+        // Fetch user profile with the token
+        const user = await userService.profile()
+        login(oauthToken, user)
+        message.success('登录成功')
+        navigate('/workspace')
       } catch (error) {
         console.error('OAuth callback error:', error)
+        localStorage.removeItem('token')
         message.error('登录验证失败，请重试')
+        navigate('/login')
       }
-      navigate('/login')
     }
 
     if (token) {
-      finish()
+      finish(token)
     } else {
       message.error('登录失败：无效的请求')
       navigate('/login')

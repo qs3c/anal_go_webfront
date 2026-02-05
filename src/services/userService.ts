@@ -1,44 +1,40 @@
-import { withLatency } from './api'
-import { loadDb, saveDb } from './mockDb'
+import { apiClient, ApiResponse } from './api'
 import type { User } from '../types'
+import type { UpdateProfileRequest } from '../types/api'
+
+interface QuotaInfo {
+  tier: string
+  daily_quota: number
+  quota_used_today: number
+  quota_remaining: number
+  max_depth: number
+  quota_reset_at: string
+}
 
 export const userService = {
-  async profile() {
-    const db = loadDb()
-    const user = db.users[0] ?? {
-      id: 0,
-      username: 'Guest',
-      email: 'guest@go-analyzer.dev',
-      avatar_url: '',
-      bio: '',
-      subscription_level: 'free',
-      email_verified: false,
-      created_at: new Date().toISOString(),
-    }
-    return withLatency(user)
+  async profile(): Promise<User> {
+    const response = await apiClient.get<ApiResponse<User>>('/user/profile')
+    return response.data.data
   },
 
-  async updateProfile(payload: Partial<User>) {
-    const db = loadDb()
-    if (!db.users.length) {
-      db.users.push({
-        id: 1,
-        username: payload.username ?? 'Guest',
-        email: payload.email ?? 'guest@go-analyzer.dev',
-        avatar_url: '',
-        bio: payload.bio ?? '',
-        subscription_level: 'free',
-        email_verified: false,
-        created_at: new Date().toISOString(),
-      })
-    } else {
-      db.users[0] = { ...db.users[0], ...payload }
-    }
-    saveDb(db)
-    return withLatency(db.users[0])
+  async updateProfile(payload: UpdateProfileRequest): Promise<User> {
+    const response = await apiClient.put<ApiResponse<User>>('/user/profile', payload)
+    return response.data.data
   },
 
-  async uploadAvatar(_file: File) {
-    return withLatency({ avatar_url: 'https://oss.example.com/avatars/demo.jpg' })
+  async uploadAvatar(file: File): Promise<{ avatar_url: string }> {
+    const formData = new FormData()
+    formData.append('file', file)
+    const response = await apiClient.post<ApiResponse<{ avatar_url: string }>>('/user/avatar', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    return response.data.data
+  },
+
+  async getQuota(): Promise<QuotaInfo> {
+    const response = await apiClient.get<ApiResponse<QuotaInfo>>('/user/quota')
+    return response.data.data
   },
 }

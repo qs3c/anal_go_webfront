@@ -15,16 +15,12 @@ export const useAuth = () => {
     setLoading(true)
     try {
       const res = await authService.login(data)
-      if (res.code === 0) {
-        login(res.data.token, res.data.user)
-        message.success('登录成功')
-        navigate('/workspace')
-      } else {
-        message.error(res.message)
-      }
-    } catch (error) {
+      login(res.token, res.user)
+      message.success('登录成功')
+      navigate('/workspace')
+    } catch (error: any) {
       console.error('Login failed:', error)
-      message.error('登录失败，请稍后再试')
+      message.error(error.response?.data?.message || '登录失败，请稍后再试')
     } finally {
       setLoading(false)
     }
@@ -34,16 +30,12 @@ export const useAuth = () => {
   const handleRegister = async (data: RegisterRequest) => {
     setLoading(true)
     try {
-      const res = await authService.register(data)
-      if (res.code === 0) {
-        message.success('注册成功')
-        navigate('/login')
-      } else {
-        message.error(res.message)
-      }
-    } catch (error) {
+      await authService.register(data)
+      message.success('注册成功')
+      navigate('/login')
+    } catch (error: any) {
       console.error('Register failed:', error)
-      message.error('注册失败，请稍后再试')
+      message.error(error.response?.data?.message || '注册失败，请稍后再试')
     } finally {
       setLoading(false)
     }
@@ -53,16 +45,12 @@ export const useAuth = () => {
     setLoading(true)
     try {
       const res = await authService.demoLogin()
-      if (res.code === 0) {
-        login(res.data.token, res.data.user)
-        message.success('已进入演示工作区')
-        navigate('/workspace')
-      } else {
-        message.error(res.message)
-      }
-    } catch (error) {
+      login(res.token, res.user)
+      message.success('已进入演示工作区')
+      navigate('/workspace')
+    } catch (error: any) {
       console.error('Demo login failed:', error)
-      message.error('演示登录失败，请稍后再试')
+      message.error(error.response?.data?.message || '演示登录失败，请稍后再试')
     } finally {
       setLoading(false)
     }
@@ -77,7 +65,8 @@ export const useAuth = () => {
 
   // GitHub 登录
   const handleGitHubLogin = () => {
-    message.info('GitHub 登录暂未接入')
+    const redirectUri = `${window.location.origin}/auth/callback`
+    authService.githubLogin(redirectUri)
   }
 
   // 微信登录

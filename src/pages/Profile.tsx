@@ -12,17 +12,13 @@ export default function Profile() {
   const handleUpdate = async (values: any) => {
     setLoading(true)
     try {
-      const res = await userService.updateProfile(values)
-      if (res.code === 0) {
-        update_user(values)
-        message.success('个人信息更新成功')
-        setEditing(false)
-      } else {
-        message.error(res.message)
-      }
-    } catch (error) {
+      const data = await userService.updateProfile(values)
+      update_user(data)
+      message.success('个人信息更新成功')
+      setEditing(false)
+    } catch (error: any) {
       console.error('Update failed:', error)
-      message.error('更新失败')
+      message.error(error.response?.data?.message || '更新失败')
     } finally {
       setLoading(false)
     }
@@ -31,17 +27,13 @@ export default function Profile() {
   const handleAvatarUpload = async (options: any) => {
     const { file, onSuccess, onError } = options
     try {
-      const res = await userService.uploadAvatar(file)
-      if (res.code === 0) {
-        update_user({ avatar_url: res.data.avatar_url })
-        onSuccess(res.data)
-        message.success('头像上传成功')
-      } else {
-        message.error(res.message)
-      }
-    } catch (error) {
+      const data = await userService.uploadAvatar(file)
+      update_user({ avatar_url: data.avatar_url })
+      onSuccess(data)
+      message.success('头像上传成功')
+    } catch (error: any) {
       onError(error)
-      message.error('头像上传失败')
+      message.error(error.response?.data?.message || '头像上传失败')
     }
   }
 

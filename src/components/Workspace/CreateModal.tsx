@@ -3,6 +3,7 @@ import { Modal, Form, Input, Tabs, Button, message } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import ConfigForm from './ConfigForm'
 import { useAnalysis } from '../../hooks/useAnalysis'
+import { GoFileInfo } from '../../services/uploadService'
 
 interface Props {
   open: boolean
@@ -12,22 +13,40 @@ interface Props {
 export default function CreateModal({ open, onClose }: Props) {
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'ai' | 'manual'>('ai')
+  const [uploadId, setUploadId] = useState<string>('')
   const [form] = Form.useForm()
   const navigate = useNavigate()
   const { createAnalysis } = useAnalysis()
+
+  const handleUploadSuccess = (id: string, _files: GoFileInfo[]) => {
+    setUploadId(id)
+    form.setFieldValue('upload_id', id)
+  }
 
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields()
       setLoading(true)
 
+      const sourceType = values.source_type || 'github'
+      const isUpload = sourceType === 'upload'
+
+      // 生成默认标题
+      let defaultTitle = 'Untitled Analysis'
+      if (isUpload && values.start_file) {
+        defaultTitle = `${values.start_file.split('/').pop()} Analysis`
+      } else if (values.repo_url) {
+        defaultTitle = `${values.repo_url.split('/').pop()} Analysis`
+      }
+
       const payload = {
-        title:
-          values.title ||
-          (activeTab === 'ai' ? `${values.repo_url.split('/').pop()} Analysis` : 'Untitled Analysis'),
+        title: values.title || defaultTitle,
         description: values.description || '',
         creation_type: activeTab,
-        repo_url: values.repo_url,
+        source_type: sourceType,
+        repo_url: isUpload ? undefined : values.repo_url,
+        upload_id: isUpload ? (uploadId || values.upload_id) : undefined,
+        start_file: isUpload ? values.start_file : undefined,
         start_struct: values.start_struct,
         analysis_depth: values.analysis_depth,
         model_name: values.model_name,
@@ -83,7 +102,7 @@ export default function CreateModal({ open, onClose }: Props) {
                 <Form.Item name="title" label="项目名称 (可选)">
                   <Input placeholder="默认为仓库名" />
                 </Form.Item>
-                <ConfigForm />
+                <ConfigForm onUploadSuccess={handleUploadSuccess} />
               </Form>
             ),
           },

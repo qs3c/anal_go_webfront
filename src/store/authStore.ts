@@ -18,9 +18,11 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       is_authenticated: false,
       login: (token, user) => {
+        localStorage.setItem('token', token)
         set({ token, user, is_authenticated: true })
       },
       logout: () => {
+        localStorage.removeItem('token')
         set({ token: null, user: null, is_authenticated: false })
       },
       update_user: (updates) =>
@@ -30,6 +32,12 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth_storage',
+      onRehydrateStorage: () => (state) => {
+        // Sync token to localStorage when rehydrating from persist storage
+        if (state?.token) {
+          localStorage.setItem('token', state.token)
+        }
+      },
     }
   )
 )

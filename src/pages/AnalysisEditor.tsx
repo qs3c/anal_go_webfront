@@ -10,6 +10,8 @@ export default function AnalysisEditor() {
   const navigate = useNavigate()
   const analysisId = useMemo(() => Number(params.id), [params.id])
 
+  console.log('[AnalysisEditor] Rendering, params:', params, 'analysisId:', analysisId)
+
   return (
     <div>
       <Space style={{ marginBottom: 16 }}>

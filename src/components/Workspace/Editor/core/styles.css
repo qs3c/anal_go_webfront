@@ -4,16 +4,12 @@
   box-sizing: border-box;
 }
 
-html, body, #root {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
-
 .excalidraw-wrapper {
   width: 100%;
   height: 100%;
   position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 /* 选中结构体时隐藏 Excalidraw 原生左侧属性面板 */
@@ -39,7 +35,7 @@ html, body, #root {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  z-index: 100;
+  z-index: 3; /* Above canvas (1-2), below Excalidraw toolbar/UI (4) */
 }
 
 .struct-box-container {
@@ -55,6 +51,8 @@ html, body, #root {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 12px;
   user-select: none;
+  min-width: 200px;
+  min-height: 150px;
 }
 
 .struct-box-container.selected {
@@ -485,30 +483,54 @@ html, body, #root {
   z-index: 1;
 }
 
-/* 自定义工具栏 */
+/* 将 Excalidraw 原生工具栏左移，为右侧自定义按钮腾出空间 */
+.excalidraw-wrapper .excalidraw .App-top-bar {
+  align-items: flex-start;
+}
+
+/* 自定义工具栏 - 模拟 Excalidraw Island 容器 */
 .custom-toolbar {
   display: flex;
-  gap: 8px;
+  gap: 2px;
+  background: var(--island-bg-color, white);
+  box-shadow: var(--shadow-island, 0 1px 5px rgba(0, 0, 0, 0.15));
+  border-radius: var(--border-radius-lg, 12px);
+  padding: var(--padding, 4px);
 }
 
 .custom-toolbar button {
-  background: white;
-  border: 1px solid #e2e8f0;
-  padding: 8px 12px;
-  border-radius: 8px;
+  background: transparent;
+  border: none;
+  width: var(--default-button-size, 2rem);
+  height: var(--default-button-size, 2rem);
+  padding: 0;
+  border-radius: var(--border-radius-md, 8px);
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: #334155;
+  justify-content: center;
+  gap: 3px;
+  font-size: 10px;
+  color: var(--icon-fill-color, #334155);
   transition: all 0.2s;
+  flex-shrink: 0;
 }
 
 .custom-toolbar button:hover {
-  background: #f8fafc;
-  border-color: #3b82f6;
-  color: #3b82f6;
+  background: var(--button-hover-bg, #f1f0ff);
+  color: var(--color-primary, #3b82f6);
+}
+
+.custom-toolbar button.active {
+  background: var(--color-primary, #3b82f6);
+  color: white;
+  width: auto;
+  padding: 0 8px;
+}
+
+.custom-toolbar .toolbar-label {
+  font-size: 10px;
+  white-space: nowrap;
 }
 
 /* 空状态 */

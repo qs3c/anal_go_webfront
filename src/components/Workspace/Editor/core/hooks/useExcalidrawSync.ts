@@ -70,22 +70,32 @@ export function useExcalidrawSync(
 
   // 筛选出结构体容器元素
   const structBoxes = useMemo(() => {
-    return syncState.elements.filter(
+    console.log('[useExcalidrawSync] Filtering structBoxes from', syncState.elements.length, 'elements');
+    const boxes = syncState.elements.filter(
       (el): el is StructBoxElement =>
         el.type === 'rectangle' &&
         (el as StructBoxElement).customData?.type === 'struct-box'
     );
+    console.log('[useExcalidrawSync] Found', boxes.length, 'struct boxes:', boxes.map(b => ({ id: b.id, type: b.type, customData: (b as any).customData?.type })));
+    return boxes;
   }, [syncState.elements]);
 
   // 计算所有结构体容器的位置
   const positions = useMemo(() => {
     const posMap = new Map<string, CalculatedPosition>();
-    if (!syncState.appState) return posMap;
+    console.log('[useExcalidrawSync] Calculating positions, appState:', !!syncState.appState, 'boxes:', structBoxes.length);
+    if (!syncState.appState) {
+      console.warn('[useExcalidrawSync] No appState, positions will be empty');
+      return posMap;
+    }
 
     structBoxes.forEach((box) => {
-      posMap.set(box.id, calculateElementPosition(box, syncState.appState!));
+      const pos = calculateElementPosition(box, syncState.appState!);
+      console.log('[useExcalidrawSync] Position for', box.id, ':', pos);
+      posMap.set(box.id, pos);
     });
 
+    console.log('[useExcalidrawSync] Calculated', posMap.size, 'positions');
     return posMap;
   }, [structBoxes, syncState.appState]);
 
@@ -164,10 +174,16 @@ export function useExcalidrawSync(
   // 从分析器导入数据
   const importFromAnalyzer = useCallback(
     (data: ImportData): { fromId: string; toId: string }[] => {
-      if (!excalidrawAPI) return [];
+      console.log('[useExcalidrawSync] importFromAnalyzer called with:', data);
+      if (!excalidrawAPI) {
+        console.warn('[useExcalidrawSync] No excalidrawAPI!');
+        return [];
+      }
 
       // 创建所有结构体元素
-      const newElements: StructBoxElement[] = data.structs.map((item) => ({
+      const newElements: StructBoxElement[] = data.structs.map((item) => {
+        console.log('[useExcalidrawSync] Processing struct:', item);
+        return {
         id: item.id,
         type: 'rectangle' as const,
         x: item.x,
@@ -194,16 +210,30 @@ export function useExcalidrawSync(
         frameId: null,
         roundness: null,
         customData: item.metadata,
-      }));
+      }});
+
+      console.log('[useExcalidrawSync] Created new elements:', newElements);
 
       // 获取现有元素并添加新元素
       const existingElements = excalidrawAPI.getSceneElements();
+      console.log('[useExcalidrawSync] Existing elements:', existingElements.length);
+
+      const allElements = [...existingElements, ...newElements];
+      console.log('[useExcalidrawSync] Updating scene with', allElements.length, 'elements');
+
       excalidrawAPI.updateScene({
-        elements: [...existingElements, ...newElements],
+        elements: allElements,
       });
 
+      // 验证更新后的状态
+      setTimeout(() => {
+        const afterElements = excalidrawAPI.getSceneElements();
+        console.log('[useExcalidrawSync] After update, elements count:', afterElements.length);
+        console.log('[useExcalidrawSync] Elements:', afterElements.map(e => ({ id: e.id, type: e.type, x: e.x, y: e.y, customData: (e as any).customData })));
+      }, 50);
+
       // 返回连接关系供调用者设置
-      return data.connections;
+      return data.connections || [];
     },
     [excalidrawAPI]
   );

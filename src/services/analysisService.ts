@@ -1,47 +1,82 @@
-import { withLatency } from './api'
-import { loadDb, saveDb, nextId, buildAnalysis } from './mockDb'
+import { apiClient, ApiResponse } from './api'
 import type { Analysis } from '../types'
+import type { CreateAnalysisRequest, UpdateAnalysisRequest, ShareRequest, AnalysisListParams } from '../types/api'
+
+interface AnalysisListResponse {
+  total: number
+  page: number
+  page_size: number
+  items: Analysis[]
+}
+
+interface CreateAnalysisResponse {
+  analysis_id: number
+  job_id?: number
+}
+
+interface JobStatusResponse {
+  job_id: number
+  analysis_id: number
+  status: string
+  current_step?: string
+  elapsed_seconds?: number
+  error_message?: string
+  started_at?: string
+}
 
 export const analysisService = {
-  async list(params: { page: number; page_size: number }) {
-    const db = loadDb()
-    const start = (params.page - 1) * params.page_size
-    const end = start + params.page_size
-    const items = db.analyses.slice(start, end)
-    return withLatency({
-      total: db.analyses.length,
-      page: params.page,
-      page_size: params.page_size,
-      items,
-    })
+  async list(params: AnalysisListParams): Promise<AnalysisListResponse> {
+    const response = await apiClient.get<ApiResponse<AnalysisListResponse>>('/analyses', { params })
+    return response.data.data
   },
 
-  async create(payload: {
-    title: string
-    description?: string
-    creation_type: 'ai' | 'manual'
-    repo_url?: string
-    start_struct?: string
-    analysis_depth?: number
-    model_name?: string
-  }) {
-    const db = loadDb()
-    const base = buildAnalysis(payload)
-    const newItem: Analysis = {
-      ...base,
-      id: nextId(db.analyses),
+  async create(payload: CreateAnalysisRequest): Promise<CreateAnalysisResponse> {
+    const response = await apiClient.post<ApiResponse<CreateAnalysisResponse>>('/analyses', payload)
+    return response.data.data
+  },
+
+  async detail(id: number): Promise<Analysis | null> {
+    const response = await apiClient.get<ApiResponse<Analysis>>(`/analyses/${id}`)
+    return response.data.data
+  },
+
+  async update(id: number, payload: UpdateAnalysisRequest): Promise<Analysis> {
+    const response = await apiClient.put<ApiResponse<Analysis>>(`/analyses/${id}`, payload)
+    return response.data.data
+  },
+
+  async delete(id: number): Promise<void> {
+    await apiClient.delete(`/analyses/${id}`)
+  },
+
+  async share(id: number, payload: ShareRequest): Promise<void> {
+    await apiClient.post(`/analyses/${id}/share`, payload)
+  },
+
+  async unshare(id: number): Promise<void> {
+    await apiClient.delete(`/analyses/${id}/share`)
+  },
+
+  async getJobStatus(id: number): Promise<JobStatusResponse> {
+    const response = await apiClient.get<ApiResponse<JobStatusResponse>>(`/analyses/${id}/job-status`)
+    return response.data.data
+  },
+
+  async getDiagramData(id: number): Promise<any> {
+    const response = await apiClient.get<any>(`/analyses/${id}/diagram`)
+    return response.data
+  },
+
+  async fetchDiagramFromUrl(url: string): Promise<any> {
+    // 处理相对路径和绝对路径
+    if (url.startsWith('/api/')) {
+      // 本地 API 端点
+      const response = await apiClient.get<any>(url.replace('/api/v1', ''))
+      return response.data
+    } else {
+      // 外部 URL (OSS)
+      const response = await fetch(url)
+      return response.json()
     }
-    db.analyses.unshift(newItem)
-    saveDb(db)
-    return withLatency({
-      analysis_id: newItem.id,
-      job_id: payload.creation_type === 'ai' ? newItem.id + 1000 : 0,
-    })
-  },
-
-  async detail(id: number) {
-    const db = loadDb()
-    const found = db.analyses.find((item) => item.id === id) ?? null
-    return withLatency(found)
   },
 }

@@ -19,28 +19,20 @@ export default function AnalysisDetail() {
   const [comments, setComments] = useState<Comment[]>([])
 
   const loadDetail = async () => {
-    const res = await communityService.detail(analysisId)
-    if (res.code === 0) {
-      setDetail(res.data as CommunityAnalysis)
+    try {
+      const data = await communityService.detail(analysisId)
+      setDetail(data)
+    } catch (error) {
+      console.error('Failed to load detail:', error)
     }
   }
 
   const loadComments = async () => {
-    const res = await commentService.list(analysisId)
-    if (res.code === 0) {
-      setComments(
-        (res.data as any[]).map((item) => ({
-          id: item.id,
-          user: {
-            id: item.user_id,
-            username: `user_${item.user_id}`,
-            avatar_url: '',
-          },
-          content: item.content,
-          parent_id: null,
-          created_at: item.created_at,
-        }))
-      )
+    try {
+      const data = await commentService.list(analysisId)
+      setComments(data)
+    } catch (error) {
+      console.error('Failed to load comments:', error)
     }
   }
 
@@ -50,8 +42,13 @@ export default function AnalysisDetail() {
       navigate('/login')
       return
     }
-    await commentService.create({ analysis_id: analysisId, user_id: 1, content })
-    await loadComments()
+    try {
+      await commentService.create(analysisId, { content })
+      await loadComments()
+    } catch (error) {
+      console.error('Failed to create comment:', error)
+      message.error('评论失败')
+    }
   }
 
   useEffect(() => {

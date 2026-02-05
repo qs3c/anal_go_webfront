@@ -17,10 +17,10 @@ export default function Community() {
   const load = async (tag = '') => {
     setLoading(true)
     try {
-      const res = await communityService.list({ page: 1, page_size: 12, tag })
-      if (res.code === 0) {
-        setItems(res.data.items as CommunityAnalysis[])
-      }
+      const data = await communityService.list({ page: 1, page_size: 12, tags: tag || undefined })
+      setItems(data.items)
+    } catch (error) {
+      console.error('Failed to load community:', error)
     } finally {
       setLoading(false)
     }
