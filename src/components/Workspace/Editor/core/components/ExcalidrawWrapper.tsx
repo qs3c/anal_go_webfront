@@ -247,14 +247,14 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({ storageKey, initi
   const renderTopRightUI = useCallback(() => {
     return (
       <div className="custom-toolbar">
-        <button onClick={handleImportClick} title="Import JSON">
+        <button onClick={handleImportClick} data-tooltip="导入 JSON">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
             <polyline points="7 10 12 15 17 10" />
             <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
         </button>
-        <button onClick={handleAddStructBox} title="Add Struct">
+        <button onClick={handleAddStructBox} data-tooltip="添加结构体">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <rect x="3" y="3" width="18" height="18" rx="2" />
             <line x1="12" y1="8" x2="12" y2="16" />
@@ -263,7 +263,7 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({ storageKey, initi
         </button>
         <button
           onClick={handleToggleConnectMode}
-          title="Connect (C)"
+          data-tooltip="连接 (C)"
           className={connectMode.active ? 'active' : ''}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -273,7 +273,7 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({ storageKey, initi
           {connectMode.active && <span className="toolbar-label">{connectMode.fromId ? '选终点' : '选起点'}</span>}
         </button>
         {connections.length > 0 && (
-          <button onClick={handleClearConnections} title="Clear Lines">
+          <button onClick={handleClearConnections} data-tooltip="清除连线">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
@@ -281,7 +281,7 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({ storageKey, initi
           </button>
         )}
         {(structBoxes.length > 0 || connections.length > 0) && (
-          <button onClick={handleClearAll} title="Clear All">
+          <button onClick={handleClearAll} data-tooltip="清空全部">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="3 6 5 6 21 6" />
               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />

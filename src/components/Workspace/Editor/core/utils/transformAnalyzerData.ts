@@ -22,7 +22,7 @@ interface ImportStructData {
 
 interface ImportData {
   structs: ImportStructData[];
-  connections: { fromId: string; toId: string }[];
+  connections: { fromId: string; toId: string; label?: string }[];
 }
 
 /**
@@ -94,18 +94,20 @@ export function transformAnalyzerData(data: any): ImportData {
     structs.push({ id, x, y, metadata });
   });
 
-  // Transform connections
-  let connections: { fromId: string; toId: string }[] = [];
+  // Transform connections - preserve label (dependency type)
+  let connections: { fromId: string; toId: string; label?: string }[] = [];
 
   if (data.connections) {
     connections = data.connections.map((c: any) => ({
       fromId: c.fromId || c.from || c.source,
       toId: c.toId || c.to || c.target,
+      label: c.label, // Preserve dependency type (字段, 调用, etc.)
     })).filter((c: any) => c.fromId && c.toId);
   } else if (data.dependencies) {
     connections = data.dependencies.map((d: any) => ({
       fromId: d.fromId || d.from || d.source,
       toId: d.toId || d.to || d.target,
+      label: d.label,
     })).filter((c: any) => c.fromId && c.toId);
   }
 

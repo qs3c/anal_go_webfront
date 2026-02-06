@@ -35,10 +35,11 @@ export default function ConfigForm({ onUploadSuccess }: ConfigFormProps) {
       console.error('Failed to load models:', error)
       setModels([
         {
-          name: 'gpt-3.5-turbo',
-          display_name: 'GPT-3.5 Turbo',
+          name: 'glm-4-flash',
+          display_name: 'GLM-4 Flash',
           required_level: 'free',
-          description: '基础模型'
+          description: '基础模型',
+          available: true
         }
       ])
     } finally {
@@ -54,8 +55,8 @@ export default function ConfigForm({ onUploadSuccess }: ConfigFormProps) {
   }
 
   const getDefaultModel = () => {
-    const availableModel = models.find(m => canUseModel(m.required_level))
-    return availableModel?.name || 'gpt-3.5-turbo'
+    const availableModel = models.find(m => canUseModel(m.required_level) && m.available)
+    return availableModel?.name || 'glm-4-flash'
   }
 
   const handleUpload = async (file: File) => {
@@ -227,7 +228,7 @@ export default function ConfigForm({ onUploadSuccess }: ConfigFormProps) {
             </Select.Option>
           ) : (
             models.map((model) => {
-              const canUse = canUseModel(model.required_level)
+              const canUse = canUseModel(model.required_level) && model.available
               const levelText =
                 model.required_level === 'free' ? '免费' :
                 model.required_level === 'basic' ? '基础会员' :
@@ -240,7 +241,8 @@ export default function ConfigForm({ onUploadSuccess }: ConfigFormProps) {
                   disabled={!canUse}
                 >
                   {model.display_name} ({levelText})
-                  {!canUse && ' 🔒'}
+                  {!model.available && ' (暂不可用)'}
+                  {model.available && !canUseModel(model.required_level) && ' 🔒'}
                 </Select.Option>
               )
             })

@@ -6,6 +6,7 @@ export interface Model {
   display_name: string
   required_level: 'free' | 'basic' | 'pro'
   description: string
+  available: boolean
 }
 
 export interface ModelsResponse {

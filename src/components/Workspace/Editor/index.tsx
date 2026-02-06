@@ -29,6 +29,11 @@ export default function Editor({ analysisId }: { analysisId: number }) {
           return
         }
 
+        // 显示后端返回的警告信息
+        if (analysis.warnings?.length) {
+          analysis.warnings.forEach(w => message.warning(w, 5))
+        }
+
         console.log('[Editor] diagram_oss_url:', analysis.diagram_oss_url)
         console.log('[Editor] status:', analysis.status)
 

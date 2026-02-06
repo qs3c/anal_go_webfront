@@ -180,7 +180,7 @@ export function useExcalidrawSync(
         return [];
       }
 
-      // 创建所有结构体元素
+      // 创建所有结构体元素（占位符，真实显示由 StructBox overlay 提供）
       const newElements: StructBoxElement[] = data.structs.map((item) => {
         console.log('[useExcalidrawSync] Processing struct:', item);
         return {
@@ -191,10 +191,10 @@ export function useExcalidrawSync(
         width: 250,
         height: 220,
         angle: 0,
-        strokeColor: '#3b82f6',
-        backgroundColor: '#eff6ff',
+        strokeColor: 'transparent',
+        backgroundColor: 'transparent',
         fillStyle: 'solid' as const,
-        strokeWidth: 2,
+        strokeWidth: 0,
         strokeStyle: 'solid' as const,
         roughness: 0,
         opacity: 100,

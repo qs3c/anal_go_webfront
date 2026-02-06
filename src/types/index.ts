@@ -30,6 +30,7 @@ export interface Analysis {
   bookmark_count: number
   created_at: string
   updated_at: string
+  warnings?: string[]
 }
 
 export interface CommunityAnalysis extends Analysis {

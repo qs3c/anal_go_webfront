@@ -48,6 +48,23 @@ export const useAnalysis = () => {
     }
   }
 
+  const deleteAnalysis = async (id: number) => {
+    setLoading(true)
+    try {
+      await analysisService.delete(id)
+      // Remove from local state
+      set_analyses(analyses.filter(a => a.id !== id))
+      message.success('删除成功')
+      return true
+    } catch (error: any) {
+      console.error('Delete analysis failed:', error)
+      message.error(error.response?.data?.message || '删除分析失败')
+      return false
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return {
     analyses,
     current_analysis,
@@ -55,5 +72,6 @@ export const useAnalysis = () => {
     set_current_analysis,
     fetchAnalyses,
     createAnalysis,
+    deleteAnalysis,
   }
 }

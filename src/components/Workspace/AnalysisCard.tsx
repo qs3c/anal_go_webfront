@@ -1,8 +1,9 @@
-import { Card, Tag, Tooltip } from 'antd'
-import { EditOutlined, ClockCircleOutlined } from '@ant-design/icons'
+import { Card, Tag, Tooltip, Modal } from 'antd'
+import { EditOutlined, ClockCircleOutlined, DeleteOutlined } from '@ant-design/icons'
 import { Link } from 'react-router-dom'
 import type { Analysis } from '../../types'
 import { formatDate } from '../../utils/format'
+import { useAnalysis } from '../../hooks/useAnalysis'
 
 interface Props {
   analysis: Analysis
@@ -17,6 +18,21 @@ const statusColors: Record<Analysis['status'], string> = {
 }
 
 export default function AnalysisCard({ analysis }: Props) {
+  const { deleteAnalysis } = useAnalysis()
+
+  const handleDelete = () => {
+    Modal.confirm({
+      title: '确认删除',
+      content: `确定要删除分析「${analysis.title}」吗？此操作不可恢复。`,
+      okText: '确认删除',
+      okType: 'danger',
+      cancelText: '取消',
+      onOk: async () => {
+        await deleteAnalysis(analysis.id)
+      },
+    })
+  }
+
   return (
     <Card
       title={analysis.title}
@@ -26,6 +42,9 @@ export default function AnalysisCard({ analysis }: Props) {
           <Link to={`/analysis/${analysis.id}`}>
             <EditOutlined />
           </Link>
+        </Tooltip>,
+        <Tooltip key="delete" title="删除">
+          <DeleteOutlined onClick={handleDelete} style={{ color: '#ff4d4f' }} />
         </Tooltip>,
       ]}
     >

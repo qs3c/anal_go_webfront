@@ -2,105 +2,127 @@ import { useEffect, useRef, useState } from 'react'
 import { message } from 'antd'
 import type { ProgressMessage } from '../types'
 
-function buildMockEvents(analysisId: number): ProgressMessage[] {
-  return [
-    {
-      type: 'analysis_progress',
-      data: {
-        job_id: analysisId + 1000,
-        analysis_id: analysisId,
-        status: 'processing',
-        current_step: '正在解析项目结构',
-        elapsed_seconds: 10,
-      },
-    },
-    {
-      type: 'analysis_progress',
-      data: {
-        job_id: analysisId + 1000,
-        analysis_id: analysisId,
-        status: 'processing',
-        current_step: '正在构建依赖关系',
-        elapsed_seconds: 30,
-      },
-    },
-    {
-      type: 'analysis_progress',
-      data: {
-        job_id: analysisId + 1000,
-        analysis_id: analysisId,
-        status: 'processing',
-        current_step: '正在生成结构图',
-        elapsed_seconds: 60,
-      },
-    },
-    {
-      type: 'analysis_completed',
-      data: {
-        job_id: analysisId + 1000,
-        analysis_id: analysisId,
-        diagram_oss_url: 'https://oss.example.com/diagrams/demo.json.gz',
-        elapsed_seconds: 90,
-      },
-    },
-  ]
-}
-
-export async function createMockProgressStream() {
-  return buildMockEvents(1)
-}
+const MAX_RECONNECT_ATTEMPTS = 10
+const RECONNECT_BASE_DELAY = 1000 // 1秒起步，指数退避
 
 export const useWebSocket = (analysisId: number, onCompleted?: (ossURL: string) => void) => {
   const [progress, setProgress] = useState<ProgressMessage | null>(null)
   const [connected, setConnected] = useState(false)
   const onCompletedRef = useRef(onCompleted)
+  const wsRef = useRef<WebSocket | null>(null)
+  const reconnectAttemptsRef = useRef(0)
+  const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const isMountedRef = useRef(true)
+  // 标记分析是否已完成/失败，完成后不再重连
+  const terminalRef = useRef(false)
 
   useEffect(() => {
     onCompletedRef.current = onCompleted
   }, [onCompleted])
 
   useEffect(() => {
-    if (!analysisId) return
+    console.log('[useWebSocket] Effect triggered, analysisId:', analysisId)
+    isMountedRef.current = true
+    terminalRef.current = false
+    reconnectAttemptsRef.current = 0
 
-    let cancelled = false
-    let timer: ReturnType<typeof setTimeout> | null = null
-    const events = buildMockEvents(analysisId)
-    let index = 0
+    if (!analysisId) {
+      console.log('[useWebSocket] No analysisId, skipping')
+      return
+    }
 
-    setConnected(true)
+    const token = localStorage.getItem('token')
+    if (!token) {
+      console.error('[useWebSocket] No token found')
+      message.error('请先登录')
+      return
+    }
 
-    const tick = () => {
-      if (cancelled) return
-      const event = events[index]
-      setProgress(event)
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    const baseUrl = 'localhost:8080/api/v1/ws'
+    const wsUrl = `${protocol}//${baseUrl}?token=${token}`
 
-      if (event.type === 'analysis_completed') {
-        message.success('分析完成！')
-        if (event.data.diagram_oss_url) {
-          onCompletedRef.current?.(event.data.diagram_oss_url)
+    const connect = () => {
+      if (!isMountedRef.current || terminalRef.current) return
+
+      console.log('[useWebSocket] Connecting...', wsUrl)
+      const ws = new WebSocket(wsUrl)
+      wsRef.current = ws
+
+      ws.onopen = () => {
+        console.log('[useWebSocket] Connected')
+        if (isMountedRef.current) {
+          setConnected(true)
+          reconnectAttemptsRef.current = 0
         }
-        setConnected(false)
-        return
       }
 
-      if (event.type === 'analysis_failed') {
-        message.error(`分析失败: ${event.data.error_message}`)
-        setConnected(false)
-        return
+      ws.onmessage = (event) => {
+        if (!isMountedRef.current) return
+
+        try {
+          const msg: ProgressMessage = JSON.parse(event.data)
+          console.log('[useWebSocket] Message received:', msg)
+
+          if (msg.data.analysis_id !== analysisId) {
+            console.log('[useWebSocket] Ignoring message for different analysis:', msg.data.analysis_id)
+            return
+          }
+
+          setProgress(msg)
+
+          if (msg.type === 'analysis_completed') {
+            terminalRef.current = true
+            message.success('分析完成！')
+            if (msg.data.diagram_oss_url) {
+              onCompletedRef.current?.(msg.data.diagram_oss_url)
+            }
+          } else if (msg.type === 'analysis_failed') {
+            terminalRef.current = true
+            message.error(`分析失败: ${msg.data.error_message || '未知错误'}`)
+          }
+        } catch (err) {
+          console.error('[useWebSocket] Failed to parse message:', err)
+        }
       }
 
-      index += 1
-      if (index < events.length) {
-        timer = setTimeout(tick, 800)
+      ws.onerror = (error) => {
+        console.error('[useWebSocket] Error:', error)
+      }
+
+      ws.onclose = (event) => {
+        console.log('[useWebSocket] Disconnected, code:', event.code, 'reason:', event.reason)
+        if (isMountedRef.current) {
+          setConnected(false)
+        }
+
+        // 如果分析已完成/失败或组件已卸载，不重连
+        if (terminalRef.current || !isMountedRef.current) return
+
+        // 自动重连（指数退避）
+        if (reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
+          const delay = RECONNECT_BASE_DELAY * Math.pow(2, reconnectAttemptsRef.current)
+          reconnectAttemptsRef.current++
+          console.log(`[useWebSocket] Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current})`)
+          reconnectTimerRef.current = setTimeout(connect, delay)
+        } else {
+          message.error('WebSocket 连接失败，请刷新页面重试')
+        }
       }
     }
 
-    tick()
+    connect()
 
     return () => {
-      cancelled = true
-      if (timer) clearTimeout(timer)
-      setConnected(false)
+      console.log('[useWebSocket] Cleanup')
+      isMountedRef.current = false
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current)
+        reconnectTimerRef.current = null
+      }
+      if (wsRef.current) {
+        wsRef.current.close()
+      }
     }
   }, [analysisId])
 
