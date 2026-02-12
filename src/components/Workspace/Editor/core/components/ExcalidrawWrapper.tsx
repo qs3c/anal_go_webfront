@@ -99,6 +99,34 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({ storageKey, initi
       const newConnections = importFromAnalyzer(transformedData);
       setConnections(newConnections);
       console.log(`[ExcalidrawWrapper] 自动导入完成: ${transformedData.structs.length} 个结构体, ${newConnections.length} 条连线`);
+
+      // 导入完成后居中画布到内容
+      setTimeout(() => {
+        const elements = excalidrawAPI.getSceneElements();
+        if (elements.length === 0) return;
+
+        // 计算所有元素的边界框
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        elements.forEach((el) => {
+          minX = Math.min(minX, el.x);
+          minY = Math.min(minY, el.y);
+          maxX = Math.max(maxX, el.x + el.width);
+          maxY = Math.max(maxY, el.y + el.height);
+        });
+
+        const centerX = (minX + maxX) / 2;
+        const centerY = (minY + maxY) / 2;
+        const appState = excalidrawAPI.getAppState();
+        const viewportWidth = appState.width || window.innerWidth;
+        const viewportHeight = appState.height || window.innerHeight;
+
+        excalidrawAPI.updateScene({
+          appState: {
+            scrollX: viewportWidth / 2 - centerX,
+            scrollY: viewportHeight / 2 - centerY + 20,
+          },
+        });
+      }, 200);
     }, 100);
   }, [excalidrawAPI, initialData, storageKey, clearAll, importFromAnalyzer]);
 

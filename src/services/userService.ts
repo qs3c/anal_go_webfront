@@ -2,13 +2,13 @@ import { apiClient, ApiResponse } from './api'
 import type { User } from '../types'
 import type { UpdateProfileRequest } from '../types/api'
 
-interface QuotaInfo {
+export interface QuotaInfo {
   tier: string
-  daily_quota: number
-  quota_used_today: number
-  quota_remaining: number
+  daily_limit: number
+  daily_used: number
+  daily_remain: number
   max_depth: number
-  quota_reset_at: string
+  reset_at: string
 }
 
 export const userService = {

@@ -21,6 +21,7 @@ export default function ConfigForm({ onUploadSuccess }: ConfigFormProps) {
   const [uploadId, setUploadId] = useState<string>('')
   const user = useAuthStore((state) => state.user)
   const userLevel = user?.subscription_level || 'free'
+  const form = Form.useFormInstance()
 
   useEffect(() => {
     loadModels()
@@ -35,10 +36,10 @@ export default function ConfigForm({ onUploadSuccess }: ConfigFormProps) {
       console.error('Failed to load models:', error)
       setModels([
         {
-          name: 'glm-4-flash',
-          display_name: 'GLM-4 Flash',
+          name: 'glm-4.7',
+          display_name: 'GLM-4.7',
           required_level: 'free',
-          description: '基础模型',
+          description: '智谱AI基础模型，快速分析（默认）',
           available: true
         }
       ])
@@ -56,7 +57,7 @@ export default function ConfigForm({ onUploadSuccess }: ConfigFormProps) {
 
   const getDefaultModel = () => {
     const availableModel = models.find(m => canUseModel(m.required_level) && m.available)
-    return availableModel?.name || 'glm-4-flash'
+    return availableModel?.name || 'glm-4.7'
   }
 
   const handleUpload = async (file: File) => {
@@ -119,7 +120,15 @@ export default function ConfigForm({ onUploadSuccess }: ConfigFormProps) {
             rules={[{ required: true, message: '请输入 GitHub 仓库地址' }, { type: 'url', message: '请输入有效的 URL' }]}
             extra="仅支持公开的 GitHub 仓库"
           >
-            <Input placeholder="https://github.com/gin-gonic/gin" />
+            <Input
+              placeholder="https://github.com/gin-gonic/gin"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !form.getFieldValue('repo_url')) {
+                  e.preventDefault()
+                  form.setFieldsValue({ repo_url: 'https://github.com/gin-gonic/gin' })
+                }
+              }}
+            />
           </Form.Item>
 
           <Form.Item
@@ -128,7 +137,15 @@ export default function ConfigForm({ onUploadSuccess }: ConfigFormProps) {
             rules={[{ required: true, message: '请输入起始结构体名称' }]}
             extra="例如: Engine"
           >
-            <Input placeholder="Engine" />
+            <Input
+              placeholder="Engine"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !form.getFieldValue('start_struct')) {
+                  e.preventDefault()
+                  form.setFieldsValue({ start_struct: 'Engine' })
+                }
+              }}
+            />
           </Form.Item>
         </>
       ) : (
@@ -229,10 +246,6 @@ export default function ConfigForm({ onUploadSuccess }: ConfigFormProps) {
           ) : (
             models.map((model) => {
               const canUse = canUseModel(model.required_level) && model.available
-              const levelText =
-                model.required_level === 'free' ? '免费' :
-                model.required_level === 'basic' ? '基础会员' :
-                '专业会员'
 
               return (
                 <Select.Option
@@ -240,7 +253,7 @@ export default function ConfigForm({ onUploadSuccess }: ConfigFormProps) {
                   value={model.name}
                   disabled={!canUse}
                 >
-                  {model.display_name} ({levelText})
+                  {model.display_name}
                   {!model.available && ' (暂不可用)'}
                   {model.available && !canUseModel(model.required_level) && ' 🔒'}
                 </Select.Option>

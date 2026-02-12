@@ -73,6 +73,7 @@ export interface ProgressMessage {
     elapsed_seconds?: number
     diagram_oss_url?: string
     error_message?: string
+    error_code?: string
   }
 }
 

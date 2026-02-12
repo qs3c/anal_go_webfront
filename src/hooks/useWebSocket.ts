@@ -39,7 +39,7 @@ export const useWebSocket = (analysisId: number, onCompleted?: (ossURL: string) 
     }
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const baseUrl = 'localhost:8080/api/v1/ws'
+    const baseUrl = '47.250.132.14:8080/api/v1/ws'
     const wsUrl = `${protocol}//${baseUrl}?token=${token}`
 
     const connect = () => {
@@ -51,6 +51,8 @@ export const useWebSocket = (analysisId: number, onCompleted?: (ossURL: string) 
 
       ws.onopen = () => {
         console.log('[useWebSocket] Connected')
+        // 只处理当前连接的事件，忽略被替换的旧连接
+        if (wsRef.current !== ws) return
         if (isMountedRef.current) {
           setConnected(true)
           reconnectAttemptsRef.current = 0
@@ -58,7 +60,7 @@ export const useWebSocket = (analysisId: number, onCompleted?: (ossURL: string) 
       }
 
       ws.onmessage = (event) => {
-        if (!isMountedRef.current) return
+        if (wsRef.current !== ws || !isMountedRef.current) return
 
         try {
           const msg: ProgressMessage = JSON.parse(event.data)
@@ -74,9 +76,7 @@ export const useWebSocket = (analysisId: number, onCompleted?: (ossURL: string) 
           if (msg.type === 'analysis_completed') {
             terminalRef.current = true
             message.success('分析完成！')
-            if (msg.data.diagram_oss_url) {
-              onCompletedRef.current?.(msg.data.diagram_oss_url)
-            }
+            onCompletedRef.current?.(msg.data.diagram_oss_url || '')
           } else if (msg.type === 'analysis_failed') {
             terminalRef.current = true
             message.error(`分析失败: ${msg.data.error_message || '未知错误'}`)
@@ -92,6 +92,13 @@ export const useWebSocket = (analysisId: number, onCompleted?: (ossURL: string) 
 
       ws.onclose = (event) => {
         console.log('[useWebSocket] Disconnected, code:', event.code, 'reason:', event.reason)
+
+        // 忽略已被替换的旧连接的 close 事件（React StrictMode 场景）
+        if (wsRef.current !== ws) {
+          console.log('[useWebSocket] Ignoring close from stale connection')
+          return
+        }
+
         if (isMountedRef.current) {
           setConnected(false)
         }

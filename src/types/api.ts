@@ -18,6 +18,7 @@ export interface LoginResponse {
 
 export interface CreateAnalysisRequest {
   title: string
+  description?: string
   creation_type: 'ai' | 'manual'
   source_type?: 'github' | 'upload'
   repo_url?: string
